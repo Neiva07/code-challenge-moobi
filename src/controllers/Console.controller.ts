@@ -14,7 +14,7 @@ export interface GetConsoleInfoInRequest extends Request {
  * List of consoles.
  */
 export let list = (req: Request, res: Response) => {
-  _Console.find({}).exec((err, targets) => {
+  _Console.find({}).exec((err, _console) => {
     if (err) {
       // If an error occurs send the error message
       return res.status(400).send({
@@ -22,7 +22,7 @@ export let list = (req: Request, res: Response) => {
       });
     }
 
-    res.json(targets);
+    res.json(_console);
   });
 };
 
