@@ -56,7 +56,7 @@ export let create = (req: Request, res: Response) => {
       );
     })
     .catch(err => {
-      res.status(406).json({ err: err.errmsg });
+      res.json(formatError(err));
     });
 };
 
@@ -82,9 +82,7 @@ export let update = (req: GetGameInfoInRequest, res: Response) => {
 
   game.save(err => {
     if (err) {
-      return res.status(422).send({
-        message: err
-      });
+      res.json(formatError(err));
     }
     const data = formatMoobiGame(game);
     res.json(formatResponse(data));
@@ -110,9 +108,7 @@ export let _delete = async (req: GetGameInfoInRequest, res: Response) => {
       res.json(formatResponse(data));
     })
     .catch(err => {
-      return res.status(422).send({
-        message: err
-      });
+      res.json(formatError(err));
     });
 };
 
@@ -126,9 +122,7 @@ export const gameByID = (
   id: string
 ) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).send({
-      message: "Game id is invalid"
-    });
+    res.json(formatError("Game id is invalid"));
   }
 
   let query = Game.findById(id);
@@ -139,12 +133,10 @@ export const gameByID = (
 
   query.exec((err, game: GameModel) => {
     if (err) {
-      return next(err);
+      res.json(formatError(err));
     }
     if (!game) {
-      return res.status(404).send({
-        message: "No game with that identifier has been found"
-      });
+      res.json(formatError("No game with that identifier has been found"));
     }
     req.game = game;
     next();
@@ -167,5 +159,12 @@ const formatResponse = (data: GameMoobi | GameMoobi[]) => {
   return {
     success: true,
     data
+  };
+};
+
+const formatError = (error: any) => {
+  return {
+    success: false,
+    error
   };
 };

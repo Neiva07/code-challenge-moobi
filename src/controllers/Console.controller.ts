@@ -40,9 +40,7 @@ export let create = (req: Request, res: Response) => {
 
   _console.save(err => {
     if (err) {
-      return res.status(422).send({
-        message: err
-      });
+      res.json(formatError(err));
     }
 
     res.json(
@@ -94,11 +92,7 @@ export let update = (req: GetConsoleInfoInRequest, res: Response) => {
       res.json(formatResponse(data));
     })
     .catch(err => {
-      if (err) {
-        return res.status(422).send({
-          message: err
-        });
-      }
+      res.json(formatError(err));
     });
 };
 
@@ -111,9 +105,7 @@ export let _delete = (req: GetConsoleInfoInRequest, res: Response) => {
 
   _console.remove(err => {
     if (err) {
-      return res.status(422).send({
-        message: err
-      });
+      res.json(formatError(err));
     }
     const data = formatMoobiConsole(_console);
     res.json(formatResponse(data));
@@ -130,9 +122,7 @@ export const consoleByID = (
   id: string
 ) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).send({
-      message: "Console id is invalid"
-    });
+    res.json(formatError("Console id is invalid"));
   }
 
   let query = _Console.findById(id);
@@ -143,12 +133,10 @@ export const consoleByID = (
 
   query.exec((err, _console: ConsoleModel) => {
     if (err) {
-      return next(err);
+      res.json(formatError(err));
     }
     if (!_console) {
-      return res.status(404).send({
-        message: "No satellite with that identifier has been found"
-      });
+      res.json(formatError("No console with that identifier has been found"));
     }
     req.console = _console;
     next();
@@ -170,5 +158,12 @@ const formatResponse = (data: ConsoleMoobi | ConsoleMoobi[]) => {
   return {
     success: true,
     data
+  };
+};
+
+const formatError = (error: any) => {
+  return {
+    success: false,
+    error
   };
 };
