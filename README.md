@@ -1,28 +1,27 @@
 #code challenge moobi
 
-basic setup to express and mongo
-
+Esta versão tem algumas diferenças da que foi pedida no challenge, porem tem alguns `insights`  sobre a api, além de unit tests.
 
 # API REF
 
-| Verbo http |            URL           | parâmetros |                             Descrição                             |                       "body"                       | Resposta |
-|------------|:------------------------:|:----------:|:-----------------------------------------------------------------:|:--------------------------------------------------:|----------|
-|     GET    | /api/consoles            |      -     | Lista de todos os video-games                                     |                          -                         |          |
-|    POST    | /api/consoles            |      -     | Cria video-games                                                  |          { name: string, company: string }         |          |
-|     GET    | /api/consoles/:consoleId | consoleId  | Detalhes do video-game, contendo todos os jogos                   |                          -                         |          |
-|     PUT    | /api/consoles/:consoleId | consoleId  | Atualiza um video-game                                            |          { name: string, company: string }         |          |
-|   DELETE   | /api/consoles/:consoleId | consoleId  | Deleta um video-game                                              |                          -                         |          |
-|     GET    | /api/games               |      -     | Lista de todos os jogos                                           |                          -                         |          |
-|    POST    | /api/games               |      -     | Cria Jogo                                                         | { name: string, consolesId: arrayOf([consoleId]) } |          |
-|     GET    | /api/games/:gameId       |   gameId   | Detalhes do jogo, contendo todos os consoles para que foi lançado |                          -                         |          |
-|     PUT    | /api/games/:gameId       |   gameId   | Atualiza um jogo                                                  |                  { name: string }                  |          |
-|   DELETE   | /api/games/:gameId       |   gameId   | Deleta um jogo                                                    |                          -                         |          |
+| Verbo http |            URL           | parâmetros |                             Descrição                             |                       "body"                       |                                                                                                             Resposta                                                                                                             |
+|------------|:------------------------:|:----------:|:-----------------------------------------------------------------:|:--------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|     GET    | /api/consoles            |      -     | Lista de todos os video-games                                     |                          -                         |                                                     arrayOf({ _id: string, updatedAt: Date, createdAt: Date, name: string, company: string,"__v": 0, games: arrayOf(gamesId)})                                                   |
+|    POST    | /api/consoles            |      -     | Cria video-games                                                  |          { name: string, company: string }         |                                                               { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string,"__v": 0, games: [] }                                                               |
+|     GET    | /api/consoles/:consoleId | consoleId  | Detalhes do video-game, contendo todos os jogos                   |                          -                         |         { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string,"__v": 0, games: arrayOf({ _id: string, updatedAt: Date, createdAt: Date, name: string, "__v": 0, consoles: arrayOf(consoleId)}) }        |
+|     PUT    | /api/consoles/:consoleId | consoleId  | Atualiza um video-game                                            |          { name: string, company: string }         |                                                        { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string,"__v": 0, games: arrayOf(gamesId) }                                                        |
+|   DELETE   | /api/consoles/:consoleId | consoleId  | Deleta um video-game                                              |                          -                         |                                                        { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string,"__v": 0, games: arrayOf(gamesId) }                                                        |
+|     GET    | /api/games               |      -     | Lista de todos os jogos                                           |                          -                         |                                                          arrayOf({ _id: string, updatedAt: Date, createdAt: Date, name: string, "__v": 0, consoles: arrayOf(consoleId)})                                                         |
+|    POST    | /api/games               |      -     | Cria Jogo                                                         | { name: string, consolesId: arrayOf([consoleId]) } |                                                     { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string, "__v": 0, consoles: arrayOf(consoleId) }                                                     |
+|     GET    | /api/games/:gameId       |   gameId   | Detalhes do jogo, contendo todos os consoles para que foi lançado |                          -                         | { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string, "__v": 0, consoles: arrayOf({ _id: string, updatedAt: Date, createdAt: Date, name: string, company: string,"__v": 0, games: arrayOf(gamesId)}) } |
+|     PUT    | /api/games/:gameId       |   gameId   | Atualiza um jogo                                                  |                  { name: string }                  |                                                     { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string, "__v": 0, consoles: arrayOf(consoleId) }                                                     |
+|   DELETE   | /api/games/:gameId       |   gameId   | Deleta um jogo                                                    |                          -                         |                                                     { _id: string, updatedAt: Date, createdAt: Date, name: string, company: string, "__v": 0, consoles: arrayOf(consoleId) }                                                     |
 
 
 # code coverage
 ![code coverage](https://user-images.githubusercontent.com/11433064/45598393-b6ade600-b9b1-11e8-8bf2-efaa1c2ab156.png)
 
-I have some problems if git, I could't upload my changes to github, so I decided to backup the project and copy all, then remove the .git folder and initialize git again to upload.
+Eu tive alguns problemas com o git. Por alguma razão não consegui fazer o upload do meu codigo direto, então decidi fazer uma copia do codigo para outra pasta (um backup) para salvar a arvore do git. Após isso eu deletei a pasta do git (.git/) e inicializei o git de novo.
 
-below has the tree, I still can show to you with my computer (only :()
+Abaixo esta a arvore que eu estava mexendo. Ainda posso mostrar a vocês, porém somente com o meu computador(only :()
 ![tree](https://user-images.githubusercontent.com/11433064/45598392-b6ade600-b9b1-11e8-8a4f-802ee0a290c4.png)
