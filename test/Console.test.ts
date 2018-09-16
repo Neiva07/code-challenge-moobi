@@ -11,7 +11,7 @@ let console_name;
 let game_id;
 
 describe("API /api/consoles", () => {
-  it("GET should return 200 OK", done => {
+  it("GET should return 200 OK and a list of consoles", done => {
     request(app)
       .get("/api/consoles")
       .expect(200)
@@ -23,7 +23,7 @@ describe("API /api/consoles", () => {
       });
   });
 
-  it("POST should return 200 OK", done => {
+  it("POST should return 200 OK and create a console", done => {
     request(app)
       .post("/api/consoles")
       .send(data)
@@ -43,7 +43,7 @@ describe("API /api/consoles", () => {
       });
   });
 
-  it("POST should return 200", done => {
+  it("POST should return 200 and error", done => {
     request(app)
       .post("/api/consoles")
       .send(data)
@@ -62,7 +62,7 @@ describe("API /api/consoles", () => {
 });
 
 describe("API /api/consoles/:consoleId", () => {
-  it("GET should return 200 OK with no games", done => {
+  it("GET should return 200 OK and a console details without any game", done => {
     request(app)
       .get(`/api/consoles/${console_id}`)
       .expect(200)
@@ -78,7 +78,7 @@ describe("API /api/consoles/:consoleId", () => {
       });
   });
 
-  it("GET should return 200 OK with games populated", done => {
+  it("GET should return 200 OK and a console details with all games", done => {
     const game = { name: "Marvel's Spider-Man", console_id, console_name };
 
     request(app)
@@ -116,7 +116,7 @@ describe("API /api/consoles/:consoleId", () => {
       });
   });
 
-  it("PUT should return 200 OK with games id", done => {
+  it("PUT should return 200 OK with updated console data", done => {
     request(app)
       .put(`/api/consoles/${console_id}`)
       .send(dataUpdated)
@@ -134,7 +134,7 @@ describe("API /api/consoles/:consoleId", () => {
       });
   });
 
-  it("DELETE should return 200 OK with games id", done => {
+  it("DELETE should return 200 OK with console data", done => {
     request(app)
       .delete(`/api/consoles/${console_id}`)
       .expect(200)
