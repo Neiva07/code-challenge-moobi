@@ -17,3 +17,12 @@ basic setup to express and mongo
 |     GET    | /api/games/:gameId       |   gameId   | Detalhes do jogo, contendo todos os consoles para que foi lançado |                          -                         |          |
 |     PUT    | /api/games/:gameId       |   gameId   | Atualiza um jogo                                                  |                  { name: string }                  |          |
 |   DELETE   | /api/games/:gameId       |   gameId   | Deleta um jogo                                                    |                          -                         |          |
+
+
+# code coverage
+![code coverage](https://user-images.githubusercontent.com/11433064/45598393-b6ade600-b9b1-11e8-8bf2-efaa1c2ab156.png)
+
+I have some problems if git, I could't upload my changes to github, so I decided to backup the project and copy all, then remove the .git folder and initialize git again to upload.
+
+below has the tree, I still can show to you with my computer (only :()
+![tree](https://user-images.githubusercontent.com/11433064/45598392-b6ade600-b9b1-11e8-8a4f-802ee0a290c4.png)
