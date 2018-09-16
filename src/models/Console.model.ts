@@ -1,14 +1,11 @@
 import mongoose from "mongoose";
+import { GameModel } from "./Game.model";
 
 export type ConsoleModel = mongoose.Document & {
+  id: string;
   name: string;
   company: string;
-  games: Game[];
-};
-
-export type Game = {
-  name: string;
-  consoles: ConsoleModel[];
+  games: GameModel[];
 };
 
 const consoleSchema = new mongoose.Schema(

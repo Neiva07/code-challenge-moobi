@@ -25,57 +25,39 @@ export let list = (req: Request, res: Response) => {
       });
     }
 
-    res.json(games);
+    const data = games.map(formatMoobiGame);
+    res.json(formatResponse(data));
   });
 };
-
-const createGameValidation = yup.object().shape({
-  name: yup.string().required(),
-  consolesId: yup
-    .array()
-    .of(yup.string().required())
-    .required()
-});
 
 /**
  * POST /api/games
  * create a new game in mongoDB.
  */
-export let create = async (req: Request, res: Response) => {
-  try {
-    createGameValidation.validateSync(req.body);
-    const { consolesId } = req.body;
-    _Console
-      .find({
-        _id: { $in: consolesId }
-      })
-      .then(results => {
-        if (results.length !== consolesId.length) {
-          res.status(406).json({ err: "one or more console ids not found" });
-        } else {
-          const game = new Game({ name: req.body.name, consoles: consolesId });
-          game
-            .save()
-            .then(() => {
-              const promises = results.map((_console: ConsoleModel) => {
-                return _console.update({
-                  $push: {
-                    games: game._id
-                  }
-                });
-              });
-              return Promise.all(promises);
-            })
-            .then(() => res.json(game))
-            .catch(err => {
-              res.status(406).json({ err: err.errmsg });
-            });
+export let create = (req: Request, res: Response) => {
+  const game = new Game(req.body);
+  game
+    .save()
+    .then(() =>
+      _Console.findByIdAndUpdate(req.body.console_id, {
+        $push: {
+          games: game._id
         }
       })
-      .catch(err => console.log(err));
-  } catch (err) {
-    res.status(406).json({ err: err.message });
-  }
+    )
+    .then(() => {
+      res.json(
+        formatResponse({
+          id: game._id,
+          name: req.body.name,
+          console_id: req.body.console_id,
+          console_name: req.body.console_name
+        })
+      );
+    })
+    .catch(err => {
+      res.status(406).json({ err: err.errmsg });
+    });
 };
 
 /**
@@ -85,7 +67,8 @@ export let create = async (req: Request, res: Response) => {
 export const read = (req: GetGameInfoInRequest, res: Response) => {
   const game = req.game ? req.game.toJSON() : {};
 
-  res.json(game);
+  const data = formatMoobiGame(game);
+  res.json(formatResponse(data));
 };
 
 /**
@@ -103,7 +86,8 @@ export let update = (req: GetGameInfoInRequest, res: Response) => {
         message: err
       });
     }
-    res.json(game);
+    const data = formatMoobiGame(game);
+    res.json(formatResponse(data));
   });
 };
 
@@ -116,15 +100,15 @@ export let _delete = async (req: GetGameInfoInRequest, res: Response) => {
 
   game
     .remove()
+    .then(() =>
+      _Console.findByIdAndUpdate(game.console_id, {
+        $pull: { games: game._id }
+      })
+    )
     .then(() => {
-      const promises = game.consoles.map(consoleId => {
-        return _Console.findByIdAndUpdate(consoleId, {
-          $pull: { games: game._id }
-        });
-      });
-      return Promise.all(promises);
+      const data = formatMoobiGame(game);
+      res.json(formatResponse(data));
     })
-    .then(() => res.json(game))
     .catch(err => {
       return res.status(422).send({
         message: err
@@ -165,4 +149,23 @@ export const gameByID = (
     req.game = game;
     next();
   });
+};
+
+export type GameMoobi = {
+  id: string;
+  name: string;
+  console_id: string;
+  console_name: string;
+};
+
+export const formatMoobiGame = (game: GameModel) => {
+  const { _id: id, name, console_id, console_name } = game;
+  return { id, name, console_id, console_name };
+};
+
+const formatResponse = (data: GameMoobi | GameMoobi[]) => {
+  return {
+    success: true,
+    data
+  };
 };

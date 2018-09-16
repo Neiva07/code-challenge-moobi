@@ -3,7 +3,8 @@
 import { Response, Request, NextFunction } from "express";
 import mongoose from "mongoose";
 import _Console, { ConsoleModel } from "../models/Console.model";
-import Game, { GameModel } from "../models/Game.model";
+import Game from "../models/Game.model";
+import { formatMoobiGame, GameMoobi } from "./Game.controller";
 
 export interface GetConsoleInfoInRequest extends Request {
   console: ConsoleModel;
@@ -14,7 +15,7 @@ export interface GetConsoleInfoInRequest extends Request {
  * List of consoles.
  */
 export let list = (req: Request, res: Response) => {
-  _Console.find({}).exec((err, _console) => {
+  _Console.find({}).exec((err, _consoles: ConsoleModel[]) => {
     if (err) {
       // If an error occurs send the error message
       return res.status(400).send({
@@ -22,7 +23,8 @@ export let list = (req: Request, res: Response) => {
       });
     }
 
-    res.json(_console);
+    const data = _consoles.map(formatMoobiConsole);
+    res.json(formatResponse(data));
   });
 };
 
@@ -31,14 +33,25 @@ export let list = (req: Request, res: Response) => {
  * create a new console in mongoDB.
  */
 export let create = (req: Request, res: Response) => {
-  const _console = new _Console(req.body);
+  const _console = new _Console({
+    name: req.body.name,
+    company: req.body.company
+  });
+
   _console.save(err => {
     if (err) {
       return res.status(422).send({
         message: err
       });
     }
-    res.json(_console);
+
+    res.json(
+      formatResponse({
+        name: req.body.name,
+        company: req.body.company,
+        id: _console._id
+      })
+    );
   });
 };
 
@@ -49,7 +62,11 @@ export let create = (req: Request, res: Response) => {
 export const read = (req: GetConsoleInfoInRequest, res: Response) => {
   const _console = req.console ? req.console.toJSON() : {};
 
-  res.json(_console);
+  const data = formatMoobiConsole(_console);
+  res.json({
+    success: true,
+    data: { ...data, games: _console.games.map(formatMoobiGame) }
+  });
 };
 
 /**
@@ -62,14 +79,27 @@ export let update = (req: GetConsoleInfoInRequest, res: Response) => {
   _console.name = req.body.name;
   _console.company = req.body.company;
 
-  _console.save(err => {
-    if (err) {
-      return res.status(422).send({
-        message: err
-      });
-    }
-    res.json(_console);
-  });
+  _console
+    .save()
+    .then(() => {
+      const promises = _console.games.map(gameId =>
+        Game.findByIdAndUpdate(gameId, {
+          console_name: _console.name
+        })
+      );
+      return Promise.all(promises);
+    })
+    .then(() => {
+      const data = formatMoobiConsole(_console);
+      res.json(formatResponse(data));
+    })
+    .catch(err => {
+      if (err) {
+        return res.status(422).send({
+          message: err
+        });
+      }
+    });
 };
 
 /**
@@ -85,7 +115,8 @@ export let _delete = (req: GetConsoleInfoInRequest, res: Response) => {
         message: err
       });
     }
-    res.json(_console);
+    const data = formatMoobiConsole(_console);
+    res.json(formatResponse(data));
   });
 };
 
@@ -122,4 +153,22 @@ export const consoleByID = (
     req.console = _console;
     next();
   });
+};
+
+type ConsoleMoobi = {
+  id: string;
+  name: string;
+  company: string;
+};
+
+const formatMoobiConsole = (_console: ConsoleModel) => {
+  const { _id: id, name, company } = _console;
+  return { id, name, company };
+};
+
+const formatResponse = (data: ConsoleMoobi | ConsoleMoobi[]) => {
+  return {
+    success: true,
+    data
+  };
 };

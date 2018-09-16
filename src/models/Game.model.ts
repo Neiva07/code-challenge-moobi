@@ -1,20 +1,17 @@
 import mongoose from "mongoose";
 
 export type GameModel = mongoose.Document & {
+  id: string;
   name: string;
-  consoles: Console[];
-};
-
-export type Console = {
-  name: string;
-  company: string;
-  games: GameModel[];
+  console_name: string;
+  console_id: string;
 };
 
 const gameSchema = new mongoose.Schema(
   {
     name: { type: String, unique: true, required: true },
-    consoles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Console" }]
+    console_name: { type: String, required: true },
+    console_id: { type: String, required: true }
   },
   { timestamps: true }
 );
