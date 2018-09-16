@@ -21,7 +21,8 @@ export let list = (req: Request, res: Response) => {
     if (err) {
       // If an error occurs send the error message
       return res.status(400).send({
-        message: err
+        success: false,
+        error: err
       });
     }
 
@@ -122,21 +123,21 @@ export const gameByID = (
   id: string
 ) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.json(formatError("Game id is invalid"));
+    return res.status(400).send({
+      success: false,
+      error: "Game id is invalid"
+    });
   }
 
-  let query = Game.findById(id);
-
-  if (req.method === "GET") {
-    query = query.populate({ path: "consoles", model: _Console });
-  }
-
-  query.exec((err, game: GameModel) => {
+  Game.findById(id).exec((err, game: GameModel) => {
     if (err) {
-      res.json(formatError(err));
+      return next(err);
     }
     if (!game) {
-      res.json(formatError("No game with that identifier has been found"));
+      return res.status(404).send({
+        success: false,
+        error: "No game with that identifier has been found"
+      });
     }
     req.game = game;
     next();

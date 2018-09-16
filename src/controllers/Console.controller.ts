@@ -19,7 +19,8 @@ export let list = (req: Request, res: Response) => {
     if (err) {
       // If an error occurs send the error message
       return res.status(400).send({
-        message: err
+        success: false,
+        error: err
       });
     }
 
@@ -122,7 +123,10 @@ export const consoleByID = (
   id: string
 ) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.json(formatError("Console id is invalid"));
+    return res.status(400).send({
+      success: false,
+      error: "Console id is invalid"
+    });
   }
 
   let query = _Console.findById(id);
@@ -133,10 +137,13 @@ export const consoleByID = (
 
   query.exec((err, _console: ConsoleModel) => {
     if (err) {
-      res.json(formatError(err));
+      return next(err);
     }
     if (!_console) {
-      res.json(formatError("No console with that identifier has been found"));
+      return res.status(404).send({
+        success: false,
+        error: "No console with that identifier has been found"
+      });
     }
     req.console = _console;
     next();
