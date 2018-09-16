@@ -42,15 +42,15 @@ export let create = (req: Request, res: Response) => {
   _console.save(err => {
     if (err) {
       res.json(formatError(err));
+    } else {
+      res.json(
+        formatResponse({
+          name: req.body.name,
+          company: req.body.company,
+          id: _console._id
+        })
+      );
     }
-
-    res.json(
-      formatResponse({
-        name: req.body.name,
-        company: req.body.company,
-        id: _console._id
-      })
-    );
   });
 };
 

@@ -1,12 +1,14 @@
 import request from "supertest";
 import app from "../src/app";
+import { stringify } from "querystring";
 
 const data = { name: "XBOX ONE", company: "Microsoft Corporation" };
 const game = { name: "Fifa 19" };
 const gameUpdated = { name: "Fifa 20" };
 
-let consoleId;
-let gameId;
+let console_id;
+let console_name;
+let game_id;
 
 describe("API /api/games", () => {
   it("GET should return 200 OK without data", done => {
@@ -15,7 +17,8 @@ describe("API /api/games", () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
-        expect(res.body).toEqual([]);
+        expect(res.body).toHaveProperty("success", true);
+        expect(res.body).toHaveProperty("data", []);
         done();
       });
   });
@@ -29,9 +32,10 @@ describe("API /api/games", () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
+        console_id = res.body.data.id;
+        console_name = res.body.data.name;
+        const newGame = { ...game, console_id, console_name };
 
-        consoleId = res.body._id;
-        const newGame = { ...game, consolesId: [consoleId] };
         request(app)
           .post("/api/games")
           .send(newGame)
@@ -40,137 +44,114 @@ describe("API /api/games", () => {
           .end((err, res) => {
             if (err) return done(err);
 
-            expect(res.body).toHaveProperty("updatedAt");
-            expect(res.body).toHaveProperty("createdAt");
-            expect(res.body).toHaveProperty("name", game.name);
-            expect(res.body).toHaveProperty("_id");
-            expect(res.body).toHaveProperty("consoles", [consoleId]);
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveProperty("id");
+            expect(res.body.data).toHaveProperty("name", newGame.name);
+            expect(res.body.data).toHaveProperty(
+              "console_id",
+              newGame.console_id
+            );
+            expect(res.body.data).toHaveProperty(
+              "console_name",
+              newGame.console_name
+            );
 
-            gameId = res.body._id;
+            game_id = res.body.data.id;
+
             done();
           });
       });
   });
 
-  it("POST should return 422 Unprocessable Entity", done => {
-    const newGame = { ...game, consolesId: [consoleId] };
+  it("POST should return 200", done => {
+    const newGame = { ...game, consolesId: [console_id] };
     request(app)
       .post("/api/games")
       .send(newGame)
       .set("Accept", "application/json")
-      .expect(422)
+      .expect(200)
       .end((err, res) => {
-        expect(res.body.err).toBe(
-          'E11000 duplicate key error collection: moobi-test.games index: name_1 dup key: { : "Fifa 19" }'
+        if (err) return done(err);
+        expect(res.body.success).toBe(false);
+        expect(res.body.error.message).toBe(
+          "Game validation failed: console_id: Path `console_id` is required., console_name: Path `console_name` is required."
         );
-        done();
-      });
-  });
-
-  it("POST should return 406 Not Acceptable", done => {
-    const newGame = { ...game };
-    request(app)
-      .post("/api/games")
-      .send(newGame)
-      .set("Accept", "application/json")
-      .expect(406)
-      .end((err, res) => {
-        if (err) return done(err);
-        expect(res.body.err).toBe("consolesId is a required field");
-
-        done();
-      });
-  });
-
-  it("POST should return 406 Not Acceptable", done => {
-    const newGame = { ...game, consolesId: ["5b9e6456300dba62abf8f0ec"] };
-    request(app)
-      .post("/api/games")
-      .send(newGame)
-      .set("Accept", "application/json")
-      .expect(406)
-      .end((err, res) => {
-        if (err) return done(err);
-        expect(res.body.err).toBe("one or more console ids not found");
-
         done();
       });
   });
 
   it("GET should return 200 OK with data", done => {
-    const newGame = { ...game, consoles: [consoleId] };
     request(app)
       .get("/api/games")
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
-        expect(res.body).toEqual(
-          expect.arrayContaining([expect.objectContaining(newGame)])
-        );
+
+        expect(res.body.success).toBe(true);
+        expect(res.body.data[0]).toHaveProperty("id");
+        expect(res.body.data[0]).toHaveProperty("name", game.name);
+        expect(res.body.data[0]).toHaveProperty("console_id", console_id);
+        expect(res.body.data[0]).toHaveProperty("console_name", console_name);
+
         done();
       });
   });
 });
 
-describe("API /api/games/:gameId", () => {
-  it("GET should return 200 OK with consoles data", done => {
+describe("API /api/games/:game_id", () => {
+  it("GET should return 200", done => {
     request(app)
-      .get(`/api/games/${gameId}`)
+      .get(`/api/games/${game_id}`)
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
 
-        expect(res.body).toHaveProperty("updatedAt");
-        expect(res.body).toHaveProperty("createdAt");
-        expect(res.body).toHaveProperty("name", game.name);
-        expect(res.body).toHaveProperty("_id");
-        expect(res.body.consoles[0]).toHaveProperty("updatedAt");
-        expect(res.body.consoles[0]).toHaveProperty("createdAt");
-        expect(res.body.consoles[0]).toHaveProperty("name", data.name);
-        expect(res.body.consoles[0]).toHaveProperty("company", data.company);
-        expect(res.body.consoles[0]).toHaveProperty("_id");
-        expect(res.body.consoles[0]).toHaveProperty("games", [gameId]);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data).toHaveProperty("id");
+        expect(res.body.data).toHaveProperty("name");
+        expect(res.body.data).toHaveProperty("console_id");
+        expect(res.body.data).toHaveProperty("console_name");
         done();
       });
   });
 
   it("PUT should return 200 OK", done => {
     request(app)
-      .put(`/api/games/${gameId}`)
+      .put(`/api/games/${game_id}`)
       .send(gameUpdated)
       .set("Accept", "application/json")
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
 
-        expect(res.body).toHaveProperty("updatedAt");
-        expect(res.body).toHaveProperty("createdAt");
-        expect(res.body).toHaveProperty("name", gameUpdated.name);
-        expect(res.body).toHaveProperty("_id");
-        expect(res.body).toHaveProperty("consoles", [consoleId]);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data).toHaveProperty("id");
+        expect(res.body.data).toHaveProperty("name", gameUpdated.name);
+        expect(res.body.data).toHaveProperty("console_id");
+        expect(res.body.data).toHaveProperty("console_name");
         done();
       });
   });
 
   it("DELETE should return 200 OK", done => {
     request(app)
-      .delete(`/api/games/${gameId}`)
+      .delete(`/api/games/${game_id}`)
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
 
-        expect(res.body).toHaveProperty("updatedAt");
-        expect(res.body).toHaveProperty("createdAt");
-        expect(res.body).toHaveProperty("name", gameUpdated.name);
-        expect(res.body).toHaveProperty("_id");
-        expect(res.body).toHaveProperty("consoles", [consoleId]);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data).toHaveProperty("name", gameUpdated.name);
+        expect(res.body.data).toHaveProperty("id");
+        expect(res.body.data).toHaveProperty("console_id", console_id);
+        expect(res.body.data).toHaveProperty("console_name", console_name);
         done();
       });
   });
 
   it("GET should return 400 Not Found", done => {
     request(app)
-      .get(`/api/games/${gameId}`)
+      .get(`/api/games/${game_id}`)
       .expect(404)
       .end((err, res) => {
         if (err) return done(err);
@@ -180,7 +161,7 @@ describe("API /api/games/:gameId", () => {
 
   it("PUT should return 400 Not Found", done => {
     request(app)
-      .put(`/api/games/${gameId}`)
+      .put(`/api/games/${game_id}`)
       .send(gameUpdated)
       .set("Accept", "application/json")
       .expect(404)
@@ -192,7 +173,7 @@ describe("API /api/games/:gameId", () => {
 
   it("DELETE should return 400 Not Found", done => {
     request(app)
-      .delete(`/api/games/${gameId}`)
+      .delete(`/api/games/${game_id}`)
       .expect(404)
       .end((err, res) => {
         if (err) return done(err);
